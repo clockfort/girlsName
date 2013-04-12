@@ -32,11 +32,11 @@ day = do
 main :: IO ()
 main = quickHttpServe site
 
-usageMessage = "Access your girl's name at mygirlsname.csh.rit.edu/NAME, and bookmark (I suggest looking up people's usernames if possible, to avoid confusion). Note there is a text-only API at /textAPI/NAME"
+usageMessage = "Access your girl's name for the day mygirlsname.csh.rit.edu/NAME, and bookmark for later use.\n(I suggest looking up people's usernames if possible, to avoid confusion). Note there is also a text-only API at /textAPI/NAME"
 
 site :: Snap ()
 site =
-    ifTop (writeBS usageMessage) <|>
+    ifTop (topHTML) <|>
     route [ (":name", girlNameHTML),
             ("textAPI", writeBS usageMessage),
             ("textAPI/:name", girlName)
@@ -64,7 +64,7 @@ girlNameHTML :: Snap ()
 girlNameHTML = do
   name <- safeGetParam "name"
   result <- liftIO $ getGirlsName $ C.unpack name
-  writeBS $ C.pack $ htmlWrapper result
+  writeBS $ C.pack $ htmlWrapper $ "Your girl's name for today is: " ++ result
 
 girlName :: Snap ()
 girlName = do
@@ -72,8 +72,12 @@ girlName = do
   result <- liftIO $ getGirlsName $ C.unpack name
   writeBS $ C.pack $ result
 
+topHTML :: Snap ()
+topHTML = do
+  writeBS $ C.pack $ htmlWrapper $ C.unpack $ usageMessage
+
 htmlWrapper name = 
-  concat [htmlHead , "<body><div class=girlName>Your girl's name for today is: " ++ name ++ "</div></body></html>"]
+  concat [htmlHead , "<body><div class=girlName>" ++ name ++ "</div></body></html>"]
 
 htmlHead =
   "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>My Girl's Name</title>"++style++"</head>"
