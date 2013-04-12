@@ -37,7 +37,7 @@ usageMessage = "Access your girl's name at mygirlsname.csh.rit.edu/NAME, and boo
 site :: Snap ()
 site =
     ifTop (writeBS usageMessage) <|>
-    route [ (":name", girlName),
+    route [ (":name", girlNameHTML),
             ("textAPI", writeBS usageMessage),
             ("textAPI/:name", girlName)
           ]
@@ -60,8 +60,23 @@ getGirlsName name = do
 safeGetParam :: MonadSnap f => B.ByteString -> f B.ByteString
 safeGetParam paramName = fromMaybe "" <$> getParam paramName
 
+girlNameHTML :: Snap ()
+girlNameHTML = do
+  name <- safeGetParam "name"
+  result <- liftIO $ getGirlsName $ C.unpack name
+  writeBS $ C.pack $ htmlWrapper result
+
 girlName :: Snap ()
 girlName = do
   name <- safeGetParam "name"
   result <- liftIO $ getGirlsName $ C.unpack name
-  writeBS $ C.pack result
+  writeBS $ C.pack $ result
+
+htmlWrapper name = 
+  concat [htmlHead , "<body><div class=girlName>Your girl's name for today is: " ++ name ++ "</div></body></html>"]
+
+htmlHead =
+  "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>My Girl's Name</title>"++style++"</head>"
+
+style = 
+  "<style type=\"text/css\">div.girlName { border: 2px solid #00f ; border-radius: 20px ; padding: 20px ; background-color: #c4e8f3 ; color: #000 ; display: inline-block ; margin-left: auto ; margin-right: auto ; }</style>"
