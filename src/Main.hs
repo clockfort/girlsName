@@ -20,7 +20,7 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as C
 import CensusData
 
-girlsNames' = [ [head name] ++ (map toLower . tail) name | name <- girlsNames ]
+girlsNames' = [ head name : (map toLower . tail) name | name <- girlsNames ]
 
 day = do
     today <- fmap utctDay getCurrentTime
@@ -36,7 +36,7 @@ usageMessage = "Access your girl's name for the day mygirlsname.csh.rit.edu/NAME
 
 site :: Snap ()
 site =
-    ifTop (topHTML) <|>
+    ifTop topHTML <|>
     route [ (":name", girlNameHTML),
             ("textAPI", writeBS usageMessage),
             ("textAPI/:name", girlName)
@@ -50,12 +50,12 @@ md5 = md5i . Str
 -- Particularly look at Dataset #2, as it is closest to our probable input
 getGirlsName name = do
 	d <- day
-	let string = (name ++ (show d))
+	let string = name ++ show d
 	let hash = (md5i . Str) string
 	let hash' = 1000*hash
-	let index = (hash' `div` (2^128))
-	let intIndex = (fromInteger index :: Int)
-	return $ (girlsNames' !! intIndex)
+	let index = hash' `div` (2^128)
+	let intIndex = fromInteger index :: Int
+	return (girlsNames' !! intIndex)
 
 safeGetParam :: MonadSnap f => B.ByteString -> f B.ByteString
 safeGetParam paramName = fromMaybe "" <$> getParam paramName
@@ -70,14 +70,13 @@ girlName :: Snap ()
 girlName = do
   name <- safeGetParam "name"
   result <- liftIO $ getGirlsName $ C.unpack name
-  writeBS $ C.pack $ result
+  writeBS $ C.pack result
 
 topHTML :: Snap ()
-topHTML = do
-  writeBS $ C.pack $ htmlWrapper $ C.unpack $ usageMessage
+topHTML = writeBS $ C.pack $ htmlWrapper $ C.unpack usageMessage
 
 htmlWrapper name = 
-  concat [htmlHead , "<body><div class=girlName>" ++ name ++ "</div></body></html>"]
+  htmlHead ++ "<body><div class=girlName>" ++ name ++ "</div></body></html>"
 
 htmlHead =
   "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>My Girl's Name</title>"++style++"</head>"
