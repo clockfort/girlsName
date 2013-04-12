@@ -32,7 +32,7 @@ day = do
 main :: IO ()
 main = quickHttpServe site
 
-usageMessage = "Access your girl's name at mygirlsname.csh.rit.edu/NAME, and bookmark. Note there is a text-only API at /textAPI/NAME"
+usageMessage = "Access your girl's name at mygirlsname.csh.rit.edu/NAME, and bookmark (I suggest looking up people's usernames if possible, to avoid confusion). Note there is a text-only API at /textAPI/NAME"
 
 site :: Snap ()
 site =
